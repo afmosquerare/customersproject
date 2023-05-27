@@ -16,7 +16,7 @@ export default function Customer() {
   const [message, setMessage] = useState('')
   const [idSearch, setIdSearch] = useState('')
 
-  const { control, handleSubmit, formState: { errors }, reset } = useForm({
+  const { control, handleSubmit, formState: { errors }, reset, setValue } = useForm({
     defaultValues: {
       firstName: '',
       lastName: ''
@@ -56,12 +56,54 @@ export default function Customer() {
     console.log(response.data);
     setHasError(false);
     showMessage('Se buscó el cliente');
+    setValue("firstName", response.data.nombre);
+    setValue("lastName", response.data.apellidos);
   }
   else{
     setHasError(true);
     showMessage('El id del cliente no existe...')
   }
 
+  }
+
+  const onUpdate = async(data) => {
+    const { firstName, lastName} = data;
+    const nombre = firstName;
+    const apellidos = lastName;
+    const response = await axios.put(`${URL}/clientes/${idSearch}`,{
+      nombre,
+      apellidos
+    })
+    if(!response.error){
+      setHasError(false);
+      showMessage('Se actualizó el cliente');
+    }
+    else{
+      setHasError(true);
+      showMessage('No se actualizó el cliente.')
+    }
+  }
+
+  const onDelete = async()=> {
+    if(confirm('Are you sure you want to delete this client?')){
+      if(idSearch != ''){
+        const response = await axios.delete(`${URL}/clientes/${idSearch}`)
+        console.log(response);
+        if(!response.data.error){
+          setHasError(false);
+          showMessage('Se eliminó el cliente');
+        }
+        else{
+          setHasError(true);
+          showMessage('No se encontró el cliente.')
+        }
+      }
+      else{
+        setHasError(true);
+        showMessage('¿Qué id se supone que voy a buscar?')
+      }
+
+    }
   }
 
 
@@ -123,13 +165,13 @@ export default function Customer() {
       <View style={{marginTop:20, flexDirection:'row'}}>
         <Button 
           icon="pencil-outline" 
-          mode="contained" onPress={() => console.log('Pressed')}>
+          mode="contained" onPress={handleSubmit(onUpdate)}>
           Actualizar
         </Button>
         <Button 
           style={{backgroundColor:'red',marginLeft:10}}
           icon="delete-outline" 
-          mode="contained" onPress={() => console.log('Pressed')}>
+          mode="contained" onPress={onDelete}>
           Eliminar
         </Button>
       </View>
